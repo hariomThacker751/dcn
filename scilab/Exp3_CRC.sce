@@ -1,55 +1,51 @@
-// Experiment 3: CRC (Cyclic Redundancy Check) generation and error detection
-// Sender:   append (n-1) zeros to the data, divide by the generator using
-//           modulo-2 division; the remainder is the CRC. Codeword = data + CRC.
-// Receiver: divide the received word by the same generator. Remainder zero
-//           means no error, non-zero remainder means an error is detected.
-
+clc;
 clear;
 
-function rem = mod2div(dividend, divisor)
-    // modulo-2 (XOR) long division, returns the remainder
-    n = length(divisor);
-    temp = dividend;
-    for i = 1:(length(dividend) - n + 1)
-        if temp(i) == 1 then
-            temp(i:i+n-1) = bitxor(temp(i:i+n-1), divisor);
+// 1. Inputs: Message and Generator Polynomial
+data = [1, 1, 0, 1];        // Original message
+poly = [1, 0, 1, 1];        // Generator polynomial (CRC-3)
+
+n_data = length(data);
+n_poly = length(poly);
+k = n_poly - 1;             // Number of CRC bits to append
+
+// 2. Padding Zeros to Message
+padded_data = [data, zeros(1, k)];
+
+// 3. Modulo-2 Division (CRC Generation)
+temp = padded_data;
+for i = 1:n_data
+    if temp(i) == 1 then
+        for j = 1:n_poly
+            temp(i + j - 1) = bitxor(temp(i + j - 1), poly(j));
         end
     end
-    rem = temp($-n+2:$);
-endfunction
-
-data = [1 0 1 1 0 1 1];   // data bits
-gen  = [1 0 1 1];         // generator polynomial x^3 + x + 1
-
-// ---------- Sender ----------
-padded = [data zeros(1, length(gen) - 1)];
-crc = mod2div(padded, gen);
-codeword = [data crc];
-
-disp("Data      : ", data);
-disp("Generator : ", gen);
-disp("CRC       : ", crc);
-disp("Codeword  : ", codeword);
-
-// ---------- Receiver: no error ----------
-r1 = codeword;
-s1 = mod2div(r1, gen);
-disp("Received (no error) : ", r1);
-disp("Remainder           : ", s1);
-if and(s1 == 0) then
-    disp("No error detected");
-else
-    disp("Error detected");
 end
 
-// ---------- Receiver: with error ----------
-r2 = codeword;
-r2(4) = 1 - r2(4);   // error introduced in bit 4
-s2 = mod2div(r2, gen);
-disp("Received (bit 4 flipped) : ", r2);
-disp("Remainder                : ", s2);
-if and(s2 == 0) then
-    disp("No error detected");
+// Extract remainder (last k bits)
+crc = temp(n_data + 1 : $);
+tx_code = [data, crc];       // Final codeword to send
+
+disp("Original Data: ", data);
+disp("CRC Checksum:  ", crc);
+disp("Transmitted:   ", tx_code);
+
+// 4. Receiver Error Check
+rx_code = tx_code;           // Change any bit to simulate an error (e.g. rx_code(2) = 0)
+temp_rx = rx_code;
+
+for i = 1:n_data
+    if temp_rx(i) == 1 then
+        for j = 1:n_poly
+            temp_rx(i + j - 1) = bitxor(temp_rx(i + j - 1), poly(j));
+        end
+    end
+end
+
+remainder = temp_rx(n_data + 1 : $);
+
+if sum(remainder) == 0 then
+    disp("Status: SUCCESS - No errors detected!");
 else
-    disp("Error detected");
+    disp("Status: ERROR - Data corrupted during transmission!");
 end
