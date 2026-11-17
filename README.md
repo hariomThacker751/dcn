@@ -7,6 +7,7 @@ Lab experiment code: Scilab programs and ESP32 (Arduino) sketches.
 | Exp | File | Aim |
 |-----|------|-----|
 | 2 | `Exp2_Bit_Stuffing.sce` | Bit stuffing and de-stuffing with `01111110` frame flags |
+| 3 | `Exp3_CRC.sce` | CRC generation using modulo-2 division and error detection at the receiver |
 | 4 | `Exp4_Hamming_Code.sce` | (7,4) Hamming code: encode, detect and correct a single-bit error |
 
 Run in Scilab (tested on 2025.0.0): open the file in SciNotes and press Execute, or
